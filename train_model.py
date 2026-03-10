@@ -61,7 +61,7 @@ def load_mnist_14x14():
     print("  Downloading MNIST (first time only)...")
     try:
         from sklearn.datasets import fetch_openml
-        mnist = fetch_openml("mnist_784", version=1, as_frame=False, parser="auto")
+        mnist = fetch_openml("mnist_784", version=1, as_frame=False, parser="liac-arff")
         X_full = mnist.data.astype(np.float64) / 255.0
         y_full = mnist.target.astype(int)
     except Exception as e:
