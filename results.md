@@ -3,8 +3,8 @@
 > A resistive crossbar circuit that classifies handwritten digits through pure analog physics.
 > No CPU. No GPU. No code execution during inference. Just Ohm's law and Kirchhoff's law.
 
-**Best Score: 0.9084** (experiment #10)
-| Latest Score: 0.9084 | Experiments: 10 |
+**Best Score: 0.9122** (experiment #11)
+| Latest Score: 0.9122 | Experiments: 11 |
 
 ## Score Progression
 
@@ -35,6 +35,7 @@
 | 8 | **0.4875** | 48.0% | 52.0% | 0.4352 | auto-experiment 2 |
 | 9 | **0.4689** | 46.0% | 50.0% | 0.4289 | auto-experiment 3 |
 | 10 | **0.9084** ⭐ | 88.0% | 94.0% | 0.9839 | auto-experiment 4 |
+| 11 | **0.9122** ⭐ | 90.0% | 92.0% | 0.9621 | auto-experiment 5 |
 
 ## Best Parameters
 
@@ -43,12 +44,12 @@
   "diode_n": 1.0,
   "mismatch_pct": 5.0,
   "mismatch_seed": 42,
-  "G_scale": 0.0003504248856977899,
-  "diode_is": 1.3627855626639836e-13,
-  "R_tia": 4492.6328331664645,
-  "R_pulldown": 515001.78231134324,
-  "V_high": 0.6944626878019671,
-  "reltol": 0.0005010808954067
+  "G_scale": 0.0005654383709377929,
+  "diode_is": 1.3165192673102367e-14,
+  "R_tia": 5304.286023943623,
+  "R_pulldown": 245598.52788772713,
+  "V_high": 0.7000127996825809,
+  "reltol": 0.0007205520816989119
 }
 ```
 
