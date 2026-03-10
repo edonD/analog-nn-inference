@@ -1,0 +1,37 @@
+{
+  "experiments": [
+    {
+      "id": 1,
+      "timestamp": "2026-03-10 11:14:42",
+      "params": {
+        "diode_n": 1.0,
+        "mismatch_pct": 5.0,
+        "mismatch_seed": 42,
+        "G_scale": 0.001,
+        "diode_is": 1e-14,
+        "R_tia": 1000,
+        "R_pulldown": 1000000,
+        "V_high": 1.0,
+        "reltol": 0.0001
+      },
+      "scores": {
+        "analog_accuracy": 0.86,
+        "digital_accuracy": 0.92,
+        "match_rate": 0.86,
+        "avg_cosine_sim": 0.9012,
+        "total_score": 0.8641,
+        "n_test": 50,
+        "n_analog_ok": 50,
+        "n_errors": 0,
+        "analog_correct": 43,
+        "digital_correct": 46,
+        "matches": 43,
+        "avg_sim_time": 0.22
+      },
+      "notes": "baseline: hard mode (n=1.0, 5% mismatch)",
+      "is_best": true
+    }
+  ],
+  "best_score": 0.8641,
+  "best_exp_id": 1
+}
