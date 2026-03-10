@@ -464,8 +464,163 @@
       },
       "notes": "auto-experiment 9",
       "is_best": true
+    },
+    {
+      "id": 16,
+      "timestamp": "2026-03-10 11:24:38",
+      "params": {
+        "diode_n": 1.0,
+        "mismatch_pct": 5.0,
+        "mismatch_seed": 42,
+        "G_scale": 0.00020970160165150164,
+        "diode_is": 3.517213087676803e-14,
+        "R_tia": 8004.23924488136,
+        "R_pulldown": 123033.8033795771,
+        "V_high": 0.7617666042387028,
+        "reltol": 0.00030146133674717793
+      },
+      "scores": {
+        "analog_accuracy": 0.9,
+        "digital_accuracy": 0.92,
+        "match_rate": 0.96,
+        "avg_cosine_sim": 0.9865,
+        "total_score": 0.9267,
+        "n_test": 50,
+        "n_analog_ok": 50,
+        "n_errors": 0,
+        "analog_correct": 45,
+        "digital_correct": 46,
+        "matches": 48,
+        "avg_sim_time": 0.22
+      },
+      "notes": "auto-experiment 10",
+      "is_best": false
+    },
+    {
+      "id": 17,
+      "timestamp": "2026-03-10 11:25:02",
+      "params": {
+        "diode_n": 1.0,
+        "mismatch_pct": 5.0,
+        "mismatch_seed": 42,
+        "G_scale": 0.00017624048076703171,
+        "diode_is": 1.2301939377115274e-14,
+        "R_tia": 9606.230861602246,
+        "R_pulldown": 152915.88260838078,
+        "V_high": 0.45145981098444105,
+        "reltol": 0.00019082332060151792
+      },
+      "scores": {
+        "analog_accuracy": 0.86,
+        "digital_accuracy": 0.92,
+        "match_rate": 0.92,
+        "avg_cosine_sim": 0.9768,
+        "total_score": 0.8897,
+        "n_test": 50,
+        "n_analog_ok": 50,
+        "n_errors": 0,
+        "analog_correct": 43,
+        "digital_correct": 46,
+        "matches": 46,
+        "avg_sim_time": 0.22
+      },
+      "notes": "auto-experiment 11",
+      "is_best": false
+    },
+    {
+      "id": 18,
+      "timestamp": "2026-03-10 11:25:25",
+      "params": {
+        "diode_n": 1.0,
+        "mismatch_pct": 5.0,
+        "mismatch_seed": 42,
+        "G_scale": 0.00013709259078448964,
+        "diode_is": 5.36445916664089e-14,
+        "R_tia": 12395.545107839043,
+        "R_pulldown": 98444.52631044651,
+        "V_high": 0.6757827680105668,
+        "reltol": 0.00011690010733389868
+      },
+      "scores": {
+        "analog_accuracy": 0.9,
+        "digital_accuracy": 0.92,
+        "match_rate": 0.96,
+        "avg_cosine_sim": 0.9864,
+        "total_score": 0.9266,
+        "n_test": 50,
+        "n_analog_ok": 50,
+        "n_errors": 0,
+        "analog_correct": 45,
+        "digital_correct": 46,
+        "matches": 48,
+        "avg_sim_time": 0.22
+      },
+      "notes": "auto-experiment 12",
+      "is_best": false
+    },
+    {
+      "id": 19,
+      "timestamp": "2026-03-10 11:25:48",
+      "params": {
+        "diode_n": 1.0,
+        "mismatch_pct": 5.0,
+        "mismatch_seed": 42,
+        "G_scale": 0.0001685448501203838,
+        "diode_is": 2.8420879476335252e-14,
+        "R_tia": 14460.75753216919,
+        "R_pulldown": 108729.60033571592,
+        "V_high": 0.42449634325480273,
+        "reltol": 0.0002331675130410142
+      },
+      "scores": {
+        "analog_accuracy": 0.88,
+        "digital_accuracy": 0.92,
+        "match_rate": 0.94,
+        "avg_cosine_sim": 0.9846,
+        "total_score": 0.9085,
+        "n_test": 50,
+        "n_analog_ok": 50,
+        "n_errors": 0,
+        "analog_correct": 44,
+        "digital_correct": 46,
+        "matches": 47,
+        "avg_sim_time": 0.22
+      },
+      "notes": "auto-experiment 13",
+      "is_best": false
+    },
+    {
+      "id": 20,
+      "timestamp": "2026-03-10 11:26:12",
+      "params": {
+        "diode_n": 1.0,
+        "mismatch_pct": 5.0,
+        "mismatch_seed": 42,
+        "G_scale": 0.00019299610319574217,
+        "diode_is": 5.009609528559484e-14,
+        "R_tia": 11358.410427231182,
+        "R_pulldown": 205442.08218768594,
+        "V_high": 0.6346014637477295,
+        "reltol": 0.00019531324751027626
+      },
+      "scores": {
+        "analog_accuracy": 0.92,
+        "digital_accuracy": 0.92,
+        "match_rate": 0.98,
+        "avg_cosine_sim": 0.9872,
+        "total_score": 0.9447,
+        "n_test": 50,
+        "n_analog_ok": 50,
+        "n_errors": 0,
+        "analog_correct": 46,
+        "digital_correct": 46,
+        "matches": 49,
+        "avg_sim_time": 0.22
+      },
+      "notes": "auto-experiment 14",
+      "is_best": true
     }
   ],
-  "best_score": 0.9387,
-  "best_exp_id": 15
+  "best_score": 0.9447,
+  "best_exp_id": 20
 }

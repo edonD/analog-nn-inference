@@ -3,8 +3,8 @@
 > A resistive crossbar circuit that classifies handwritten digits through pure analog physics.
 > No CPU. No GPU. No code execution during inference. Just Ohm's law and Kirchhoff's law.
 
-**Best Score: 0.9387** (experiment #15)
-| Latest Score: 0.9387 | Experiments: 15 |
+**Best Score: 0.9447** (experiment #20)
+| Latest Score: 0.9447 | Experiments: 20 |
 
 ## Score Progression
 
@@ -40,6 +40,11 @@
 | 13 | **0.8690** | 84.0% | 90.0% | 0.9503 | auto-experiment 7 |
 | 14 | **0.5083** | 50.0% | 54.0% | 0.4625 | auto-experiment 8 |
 | 15 | **0.9387** ⭐ | 92.0% | 96.0% | 0.9872 | auto-experiment 9 |
+| 16 | **0.9267** | 90.0% | 96.0% | 0.9865 | auto-experiment 10 |
+| 17 | **0.8897** | 86.0% | 92.0% | 0.9768 | auto-experiment 11 |
+| 18 | **0.9266** | 90.0% | 96.0% | 0.9864 | auto-experiment 12 |
+| 19 | **0.9085** | 88.0% | 94.0% | 0.9846 | auto-experiment 13 |
+| 20 | **0.9447** ⭐ | 92.0% | 98.0% | 0.9872 | auto-experiment 14 |
 
 ## Best Parameters
 
@@ -48,12 +53,12 @@
   "diode_n": 1.0,
   "mismatch_pct": 5.0,
   "mismatch_seed": 42,
-  "G_scale": 0.00021743427587349044,
-  "diode_is": 3.929648860842187e-14,
-  "R_tia": 11361.380927154252,
-  "R_pulldown": 153233.83358905473,
-  "V_high": 0.6150784445793952,
-  "reltol": 0.0001625035945004394
+  "G_scale": 0.00019299610319574217,
+  "diode_is": 5.009609528559484e-14,
+  "R_tia": 11358.410427231182,
+  "R_pulldown": 205442.08218768594,
+  "V_high": 0.6346014637477295,
+  "reltol": 0.00019531324751027626
 }
 ```
 
