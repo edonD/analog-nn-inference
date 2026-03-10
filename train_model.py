@@ -1,21 +1,21 @@
 #!/usr/bin/env python3
 """
-Train a small MLP on 8x8 digit images for analog crossbar implementation.
+Train a small MLP on digit images for analog crossbar implementation.
+
+Supports two modes:
+    --mode 8x8:   sklearn 8x8 digits (1,797 samples, 64 inputs)
+    --mode 14x14: downsampled MNIST (10,000 samples, 196 inputs)  [DEFAULT]
 
 Architecture:
-    Input:  64 pixels (8x8 grayscale, values 0-1)
-    Layer1: Linear 64->32, ReLU
-    Layer2: Linear 32->10, (raw logits for analog, softmax for digital)
+    Input:  196 pixels (14x14) or 64 pixels (8x8)
+    Layer1: Linear N->hidden, ReLU
+    Layer2: Linear hidden->10
     Output: 10 classes (digits 0-9)
 
-Uses sklearn's 8x8 digits dataset (1,797 samples, 10 classes).
-Pure numpy training with Adam optimizer.
-
 Usage:
-    python train_model.py              # Train + export + evaluate
-    python train_model.py --demo       # Run demo with existing weights
-    python train_model.py --hidden 64  # Larger hidden layer
-    python train_model.py --epochs 2000 --lr 0.005
+    python train_model.py                        # 14x14, hidden=64, 2000 epochs
+    python train_model.py --mode 8x8 --hidden 32 # 8x8 mode
+    python train_model.py --demo                  # Run demo with existing weights
 """
 
 import argparse
@@ -24,53 +24,87 @@ import os
 import sys
 import numpy as np
 
-# ---------------------------------------------------------------------------
-# Dataset: sklearn 8x8 digits (bundled, no download needed)
-# ---------------------------------------------------------------------------
-# We embed a minimal loader that works without sklearn installed.
-# If sklearn is available, we use it. Otherwise, fall back to a bundled copy.
-
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
-INPUT_DIM = 64   # 8x8 pixels
 OUTPUT_DIM = 10  # digits 0-9
 
 
-def load_digits_sklearn():
-    """Load 8x8 digits from sklearn."""
-    from sklearn.datasets import load_digits
-    digits = load_digits()
-    X = digits.data / 16.0  # normalize to [0, 1]
-    y = digits.target
-    return X, y
+# ---------------------------------------------------------------------------
+# Dataset loaders
+# ---------------------------------------------------------------------------
 
-
-def load_digits_bundled():
-    """Load digits from bundled JSON file."""
-    path = os.path.join(SCRIPT_DIR, "digits_dataset.json")
-    if not os.path.exists(path):
-        raise FileNotFoundError(
-            f"No bundled dataset at {path}. Install scikit-learn: pip install scikit-learn"
-        )
-    with open(path, "r") as f:
-        data = json.load(f)
-    return np.array(data["X"]), np.array(data["y"])
-
-
-def load_dataset():
-    """Load 8x8 digit dataset, trying sklearn first then bundled."""
+def load_digits_8x8():
+    """Load 8x8 digits from sklearn or bundled file."""
+    bundled_path = os.path.join(SCRIPT_DIR, "digits_dataset.json")
     try:
-        return load_digits_sklearn()
+        from sklearn.datasets import load_digits
+        digits = load_digits()
+        X = digits.data / 16.0
+        y = digits.target
+        return X, y, 8
     except ImportError:
-        return load_digits_bundled()
+        pass
+    if os.path.exists(bundled_path):
+        with open(bundled_path, "r") as f:
+            data = json.load(f)
+        return np.array(data["X"]), np.array(data["y"]), 8
+    raise FileNotFoundError("No 8x8 dataset. Install scikit-learn: pip install scikit-learn")
 
 
-def save_dataset_bundle(X, y):
-    """Save dataset as JSON for environments without sklearn."""
-    path = os.path.join(SCRIPT_DIR, "digits_dataset.json")
-    data = {"X": X.tolist(), "y": y.tolist()}
-    with open(path, "w") as f:
-        json.dump(data, f)
-    print(f"  Saved bundled dataset -> {path}")
+def load_mnist_14x14():
+    """Load MNIST downsampled to 14x14 from bundled file or sklearn."""
+    bundled_path = os.path.join(SCRIPT_DIR, "mnist_14x14.npz")
+    if os.path.exists(bundled_path):
+        data = np.load(bundled_path)
+        return data["X"], data["y"], 14
+
+    # Generate from sklearn fetch_openml
+    print("  Downloading MNIST (first time only)...")
+    try:
+        from sklearn.datasets import fetch_openml
+        mnist = fetch_openml("mnist_784", version=1, as_frame=False, parser="auto")
+        X_full = mnist.data.astype(np.float64) / 255.0
+        y_full = mnist.target.astype(int)
+    except Exception as e:
+        raise RuntimeError(f"Could not load MNIST: {e}. Run with --mode 8x8 instead.")
+
+    # Downsample 28x28 -> 14x14 via 2x2 average pooling
+    X_28 = X_full.reshape(-1, 28, 28)
+    X_14 = X_28.reshape(-1, 14, 2, 14, 2).mean(axis=(2, 4))
+    X_flat = X_14.reshape(-1, 196)
+
+    # Subsample to keep it manageable: 8000 train + 2000 test
+    rng = np.random.RandomState(42)
+    indices = rng.permutation(len(X_flat))[:10000]
+    X_sub = X_flat[indices]
+    y_sub = y_full[indices]
+
+    # Save bundled
+    np.savez_compressed(bundled_path, X=X_sub, y=y_sub)
+    print(f"  Saved bundled MNIST 14x14 -> {bundled_path} ({len(X_sub)} samples)")
+
+    return X_sub, y_sub, 14
+
+
+def load_dataset(mode="14x14"):
+    """Load digit dataset based on mode."""
+    if mode == "8x8":
+        return load_digits_8x8()
+    else:
+        return load_mnist_14x14()
+
+
+def save_dataset_bundle(X, y, mode="8x8"):
+    """Save dataset as bundled file."""
+    if mode == "8x8":
+        path = os.path.join(SCRIPT_DIR, "digits_dataset.json")
+        data = {"X": X.tolist(), "y": y.tolist()}
+        with open(path, "w") as f:
+            json.dump(data, f)
+        print(f"  Saved bundled dataset -> {path}")
+    else:
+        path = os.path.join(SCRIPT_DIR, "mnist_14x14.npz")
+        np.savez_compressed(path, X=X, y=y)
+        print(f"  Saved bundled dataset -> {path}")
 
 
 def train_test_split(X, y, test_ratio=0.2, seed=42):
@@ -176,21 +210,23 @@ def predict(X, W1, b1, W2, b2):
 # ---------------------------------------------------------------------------
 # Training
 # ---------------------------------------------------------------------------
-def train(hidden_dim=32, epochs=1000, lr=0.01):
+def train(hidden_dim=64, epochs=2000, lr=0.005, mode="14x14"):
     print("Loading dataset...")
-    X_all, y_all = load_dataset()
+    X_all, y_all, img_size = load_dataset(mode)
+    input_dim = X_all.shape[1]
     X_train, y_train, X_test, y_test = train_test_split(X_all, y_all)
 
     N_train = X_train.shape[0]
     N_test = X_test.shape[0]
+    print(f"  Mode: {mode} ({img_size}x{img_size})")
     print(f"  Train: {N_train}, Test: {N_test}")
-    print(f"  Input: {INPUT_DIM}, Hidden: {hidden_dim}, Output: {OUTPUT_DIM}")
-    print(f"  Parameters: {INPUT_DIM * hidden_dim + hidden_dim + hidden_dim * OUTPUT_DIM + OUTPUT_DIM}")
+    print(f"  Input: {input_dim}, Hidden: {hidden_dim}, Output: {OUTPUT_DIM}")
+    print(f"  Parameters: {input_dim * hidden_dim + hidden_dim + hidden_dim * OUTPUT_DIM + OUTPUT_DIM}")
     print()
 
     # Xavier init
     np.random.seed(42)
-    W1 = np.random.randn(INPUT_DIM, hidden_dim) * np.sqrt(2.0 / INPUT_DIM)
+    W1 = np.random.randn(input_dim, hidden_dim) * np.sqrt(2.0 / input_dim)
     b1 = np.zeros(hidden_dim)
     W2 = np.random.randn(hidden_dim, OUTPUT_DIM) * np.sqrt(2.0 / hidden_dim)
     b2 = np.zeros(OUTPUT_DIM)
@@ -237,21 +273,23 @@ def train(hidden_dim=32, epochs=1000, lr=0.01):
         row = "".join(f"{cm[i][j]:>5d}" for j in range(10))
         print(f"    {i}: {row}")
 
-    return W1, b1, W2, b2, train_acc, test_acc, X_all, y_all
+    return W1, b1, W2, b2, train_acc, test_acc, X_all, y_all, img_size
 
 
 # ---------------------------------------------------------------------------
 # Export
 # ---------------------------------------------------------------------------
-def export_weights(W1, b1, W2, b2, train_acc, test_acc, out_dir="."):
+def export_weights(W1, b1, W2, b2, train_acc, test_acc, img_size=14, out_dir="."):
+    input_dim = W1.shape[0]
     path = os.path.join(out_dir, "weights.json")
     data = {
         "architecture": {
-            "input": INPUT_DIM,
+            "input": input_dim,
             "hidden": len(b1),
             "output": OUTPUT_DIM,
             "activation": "relu",
-            "task": "mnist_8x8_digit_classification",
+            "task": f"mnist_{img_size}x{img_size}_digit_classification",
+            "img_size": img_size,
         },
         "W1": W1.tolist(),
         "b1": b1.tolist(),
@@ -283,12 +321,14 @@ def demo(weights_dir=None):
     b1 = np.array(data["b1"])
     W2 = np.array(data["W2"])
     b2 = np.array(data["b2"])
+    img_size = data.get("architecture", {}).get("img_size", 8)
+    mode = "8x8" if img_size == 8 else "14x14"
 
-    X, y = load_dataset()
+    X, y, _ = load_dataset(mode)
     _, _, X_test, y_test = train_test_split(X, y)
 
     print("\n" + "=" * 50)
-    print("  DEMO: Analog MNIST Digit Classification")
+    print(f"  DEMO: Analog MNIST Digit Classification ({img_size}x{img_size})")
     print("=" * 50)
 
     # Show 10 random test digits
@@ -309,18 +349,19 @@ def demo(weights_dir=None):
         match = pred == true_label
         correct += match
 
-        # ASCII art (8x8 grid)
-        pixels = img.reshape(8, 8)
+        # ASCII art
+        pixels = img.reshape(img_size, img_size)
         ascii_chars = " .:-=+*#@"
         print(f"\n  True: {true_label}  Predicted: {pred}  {'OK' if match else 'WRONG'}")
-        print("  +--------+")
+        border = "-" * img_size
+        print(f"  +{border}+")
         for row in pixels:
             line = ""
             for val in row:
                 idx_char = min(int(val * (len(ascii_chars) - 1)), len(ascii_chars) - 1)
                 line += ascii_chars[idx_char]
             print(f"  |{line}|")
-        print("  +--------+")
+        print(f"  +{border}+")
 
         # Top-3 logits
         top3 = np.argsort(logits)[::-1][:3]
@@ -337,8 +378,10 @@ def demo(weights_dir=None):
 def main():
     parser = argparse.ArgumentParser(description="Train MNIST 8x8 digit classifier for analog circuit.")
     parser.add_argument("--demo", action="store_true", help="Run demo with existing weights")
-    parser.add_argument("--hidden", type=int, default=32, help="Hidden layer size (default: 32)")
-    parser.add_argument("--epochs", type=int, default=1500, help="Training epochs (default: 1500)")
+    parser.add_argument("--mode", choices=["8x8", "14x14"], default="14x14",
+                        help="Dataset mode (default: 14x14)")
+    parser.add_argument("--hidden", type=int, default=64, help="Hidden layer size (default: 64)")
+    parser.add_argument("--epochs", type=int, default=2000, help="Training epochs (default: 2000)")
     parser.add_argument("--lr", type=float, default=0.005, help="Learning rate (default: 0.005)")
     parser.add_argument("--save-dataset", action="store_true", help="Save dataset bundle for offline use")
     args = parser.parse_args()
@@ -347,13 +390,13 @@ def main():
         demo(SCRIPT_DIR)
         return
 
-    W1, b1, W2, b2, train_acc, test_acc, X_all, y_all = train(
-        hidden_dim=args.hidden, epochs=args.epochs, lr=args.lr
+    W1, b1, W2, b2, train_acc, test_acc, X_all, y_all, img_size = train(
+        hidden_dim=args.hidden, epochs=args.epochs, lr=args.lr, mode=args.mode
     )
-    export_weights(W1, b1, W2, b2, train_acc, test_acc, out_dir=SCRIPT_DIR)
+    export_weights(W1, b1, W2, b2, train_acc, test_acc, img_size=img_size, out_dir=SCRIPT_DIR)
 
     if args.save_dataset:
-        save_dataset_bundle(X_all / X_all.max(), y_all)
+        save_dataset_bundle(X_all, y_all, mode=args.mode)
 
     print()
     demo(SCRIPT_DIR)

@@ -42,6 +42,7 @@ def load_weights(weights_path=None):
         "b1": np.array(data["b1"]),
         "W2": np.array(data["W2"]),
         "b2": np.array(data["b2"]),
+        "architecture": data.get("architecture", {}),
     }
 
 
@@ -202,10 +203,14 @@ def evaluate(n_test=50, mode="crossbar", params_path=None, weights_path=None,
     # Load data
     sys.path.insert(0, str(SCRIPT_DIR))
     from train_model import load_dataset, train_test_split
-    X, y = load_dataset()
-    _, _, X_test, y_test = train_test_split(X, y)
-
     weights = load_weights(weights_path)
+    img_size = weights.get("architecture", {}).get("img_size", 8) if hasattr(weights, 'get') else 8
+
+    # Detect mode from weights
+    n_in = weights["W1"].shape[0]
+    ds_mode = "8x8" if n_in == 64 else "14x14"
+    X, y, _ = load_dataset(ds_mode)
+    _, _, X_test, y_test = train_test_split(X, y)
     ngspice_cmd = find_ngspice()
     if ngspice_cmd is None:
         print("ERROR: ngspice not found")

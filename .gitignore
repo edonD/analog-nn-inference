@@ -12,5 +12,11 @@ __pycache__/
 # Auto-generated data
 nn_*.txt
 
-# Results (keep eval_results.json and experiment_history.json tracked)
+# Temp params
 suggested_params.json
+
+# Large binary datasets (generated on first run)
+mnist_14x14.npz
+
+# Dashboard (local viewing only)
+dashboard.html
