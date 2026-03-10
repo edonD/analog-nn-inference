@@ -309,8 +309,39 @@
       },
       "notes": "auto-experiment 4",
       "is_best": true
+    },
+    {
+      "id": 11,
+      "timestamp": "2026-03-10 11:22:31",
+      "params": {
+        "diode_n": 1.0,
+        "mismatch_pct": 5.0,
+        "mismatch_seed": 42,
+        "G_scale": 0.0005654383709377929,
+        "diode_is": 1.3165192673102367e-14,
+        "R_tia": 5304.286023943623,
+        "R_pulldown": 245598.52788772713,
+        "V_high": 0.7000127996825809,
+        "reltol": 0.0007205520816989119
+      },
+      "scores": {
+        "analog_accuracy": 0.9,
+        "digital_accuracy": 0.92,
+        "match_rate": 0.92,
+        "avg_cosine_sim": 0.9621,
+        "total_score": 0.9122,
+        "n_test": 50,
+        "n_analog_ok": 50,
+        "n_errors": 0,
+        "analog_correct": 45,
+        "digital_correct": 46,
+        "matches": 46,
+        "avg_sim_time": 0.22
+      },
+      "notes": "auto-experiment 5",
+      "is_best": true
     }
   ],
-  "best_score": 0.9084,
-  "best_exp_id": 10
+  "best_score": 0.9122,
+  "best_exp_id": 11
 }
