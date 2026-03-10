@@ -10,7 +10,6 @@ __pycache__/
 *.pyc
 
 # Auto-generated data
-digits_dataset.json
 nn_*.txt
 
 # Results (keep eval_results.json and experiment_history.json tracked)
