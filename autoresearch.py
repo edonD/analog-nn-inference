@@ -5,15 +5,17 @@ Autoresearcher for analog MNIST classifier optimization.
 Manages experiment history, suggests parameter changes, and tracks
 the optimization journey from initial analog accuracy to maximized score.
 
-The autoresearcher tunes these analog design parameters:
+Hard constraints (NOT tunable - realistic silicon):
+    diode_n       = 1.0    (real silicon diode ideality)
+    mismatch_pct  = 5.0    (5% manufacturing resistor variation)
+
+The autoresearcher tunes these circuit design parameters:
     G_scale     - Conductance scaling (weight-to-resistance mapping)
-    diode_n     - ReLU diode ideality factor (sharpness)
     diode_is    - ReLU diode saturation current
     R_tia       - Transimpedance amplifier gain
     R_pulldown  - ReLU pull-down resistance
     V_high      - Input voltage scale
     reltol      - ngspice convergence tolerance
-    hidden_dim  - Hidden layer size (requires retraining)
 
 Usage:
     python autoresearch.py status                # Show current best & history
@@ -34,7 +36,16 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 HISTORY_FILE = SCRIPT_DIR / "experiment_history.json"
 
 # ---------------------------------------------------------------------------
-# Parameter space definition
+# Hard constraints (realistic silicon — NOT tunable)
+# ---------------------------------------------------------------------------
+FIXED_PARAMS = {
+    "diode_n": 1.0,          # Real silicon diode ideality factor
+    "mismatch_pct": 5.0,     # 5% manufacturing resistor variation
+    "mismatch_seed": 42,     # Reproducible randomness
+}
+
+# ---------------------------------------------------------------------------
+# Tunable parameter space (circuit design knobs)
 # ---------------------------------------------------------------------------
 PARAM_SPACE = {
     "G_scale": {
@@ -44,18 +55,11 @@ PARAM_SPACE = {
         "default": 1e-3,
         "description": "Conductance scale factor (weight=1 -> G=G_scale)",
     },
-    "diode_n": {
-        "type": "log",
-        "min": 0.0001,
-        "max": 1.0,
-        "default": 0.001,
-        "description": "Diode ideality factor (lower = sharper ReLU)",
-    },
     "diode_is": {
         "type": "log",
         "min": 1e-18,
         "max": 1e-10,
-        "default": 1e-15,
+        "default": 1e-14,
         "description": "Diode saturation current",
     },
     "R_tia": {
@@ -87,6 +91,13 @@ PARAM_SPACE = {
         "description": "ngspice relative tolerance",
     },
 }
+
+
+def build_full_params(tunable_params):
+    """Combine tunable params with fixed hard-mode constraints."""
+    full = dict(FIXED_PARAMS)
+    full.update(tunable_params)
+    return full
 
 
 def load_history():
@@ -172,7 +183,7 @@ def suggest_next():
     if n == 0:
         # First experiment: use defaults
         print("\n  Suggestion: Run baseline with default parameters")
-        params = {k: v["default"] for k, v in PARAM_SPACE.items()}
+        params = build_full_params({k: v["default"] for k, v in PARAM_SPACE.items()})
         print(f"  Params: {json.dumps(params, indent=4)}")
         return params
 
@@ -244,21 +255,25 @@ def suggest_next():
 
     print(f"  Suggested params:")
     for k, v in params.items():
-        default = PARAM_SPACE[k]["default"]
         diff = ""
         if k in best_params:
             ratio = v / best_params[k] if best_params[k] != 0 else 0
             diff = f" (vs best: {ratio:.2f}x)"
         print(f"    {k}: {v:.6g}{diff}")
 
+    # Add fixed hard-mode constraints
+    full_params = build_full_params(params)
+    print(f"  Fixed constraints: diode_n={FIXED_PARAMS['diode_n']}, "
+          f"mismatch_pct={FIXED_PARAMS['mismatch_pct']}%")
+
     # Save suggestion
     params_path = SCRIPT_DIR / "suggested_params.json"
     with open(params_path, "w") as f:
-        json.dump(params, f, indent=2)
+        json.dump(full_params, f, indent=2)
     print(f"\n  Saved to {params_path}")
     print(f"  Run: python evaluate.py --params {params_path}")
 
-    return params
+    return full_params
 
 
 def show_history():
@@ -288,12 +303,25 @@ def show_history():
 
 
 def run_baseline():
-    """Run baseline evaluation with default parameters."""
-    print("Running baseline evaluation...")
+    """Run baseline evaluation with hard-mode default parameters."""
     import subprocess
+
+    # Write hard-mode defaults to suggested_params.json
+    default_tunable = {k: v["default"] for k, v in PARAM_SPACE.items()}
+    full_params = build_full_params(default_tunable)
+    params_path = SCRIPT_DIR / "suggested_params.json"
+    with open(params_path, "w") as f:
+        json.dump(full_params, f, indent=2)
+
+    print(f"Running baseline with hard-mode constraints:")
+    print(f"  diode_n={FIXED_PARAMS['diode_n']} (real silicon)")
+    print(f"  mismatch_pct={FIXED_PARAMS['mismatch_pct']}%")
+    print()
+
     result = subprocess.run(
         [sys.executable, str(SCRIPT_DIR / "evaluate.py"),
-         "--n-test", "20", "--mode", "crossbar"],
+         "--n-test", "50", "--mode", "crossbar",
+         "--params", str(params_path)],
         capture_output=True, text=True, cwd=str(SCRIPT_DIR),
     )
     print(result.stdout)
@@ -306,8 +334,7 @@ def run_baseline():
         with open(eval_path, "r") as f:
             data = json.load(f)
         scores = data["scores"]
-        default_params = {k: v["default"] for k, v in PARAM_SPACE.items()}
-        exp_id = log_experiment(default_params, scores, notes="baseline with defaults")
+        exp_id = log_experiment(full_params, scores, notes="baseline: hard mode (n=1.0, 5% mismatch)")
         print(f"\nLogged as experiment #{exp_id}")
 
 
